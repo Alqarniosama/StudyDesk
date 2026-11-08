@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudyDesk</title>
+<style>
+  :root{
+    --bg:#f5f6f4; --card:#ffffff; --ink:#1b2626; --muted:#5d6a69; --line:#e2e6e4;
+    --accent:#0f766e; --accent-soft:#e6f2f0; --good:#15803d; --warn:#b45309; --bad:#b91c1c;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  header{padding:20px 16px 8px;max-width:960px;margin:0 auto}
+  header h1{margin:0;font-size:28px;color:var(--accent);letter-spacing:-.5px}
+  header p{margin:2px 0 0;color:var(--muted)}
+  nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+  nav .tabs{max-width:960px;margin:0 auto;display:flex;gap:4px;padding:8px 12px;overflow-x:auto}
+  nav button{flex:1 0 auto;border:0;background:transparent;padding:10px 14px;border-radius:10px;font:600 15px system-ui,sans-serif;color:var(--muted);cursor:pointer;min-height:44px}
+  nav button.on{background:var(--accent);color:#fff}
+  main{max-width:960px;margin:0 auto;padding:16px 12px 40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+  .card h2{margin:0 0 4px;font-size:19px}
+  .card h3{margin:14px 0 6px;font-size:16px}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 10px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .grow{flex:1 1 160px}
+  input,select,textarea{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);min-height:44px;width:100%}
+  textarea{min-height:90px}
+  input[type=checkbox]{width:22px;height:22px;min-height:0;accent-color:var(--accent)}
+  label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
+  .btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:10px;padding:10px 16px;font:600 15px system-ui,sans-serif;cursor:pointer;min-height:44px}
+  .btn.ghost{background:#fff;color:var(--accent)}
+  .btn.small{padding:6px 10px;min-height:34px;font-size:13px}
+  .btn.danger{border-color:#f0c9c9;background:#fff;color:var(--bad)}
+  .btn.danger.arm{background:var(--bad);color:#fff;border-color:var(--bad)}
+  .badge{display:inline-block;font:700 12px system-ui,sans-serif;letter-spacing:.4px;padding:3px 8px;border-radius:999px;border:1px solid;white-space:nowrap}
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  table{border-collapse:collapse;width:100%}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:13px;color:var(--muted);font-weight:600}
+  td input{min-height:38px;padding:6px 8px}
+  .note{padding:10px 12px;border-radius:10px;background:var(--accent-soft);font-size:14px;margin:8px 0}
+  .note.warn{background:#fdf3e4;color:#7a4a08}
+  .ok{color:var(--good);font-weight:600}
+  .bad{color:var(--bad);font-weight:600}
+  details{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-top:10px;background:#fbfcfb}
+  details summary{cursor:pointer;font-weight:600;color:var(--accent)}
+  .empty{text-align:center;padding:28px 16px}
+  .empty p{color:var(--muted)}
+  /* confidence */
+  .conf{display:flex;gap:4px}
+  .conf button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:#fff;font:600 15px system-ui,sans-serif;cursor:pointer}
+  .conf button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .ratingrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .ratingrow:last-child{border-bottom:0}
+  /* tasks */
+  .progress{height:10px;background:var(--line);border-radius:999px;overflow:hidden;margin:6px 0 4px}
+  .progress span{display:block;height:100%;background:var(--accent)}
+  .task{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-left:6px solid;border-radius:12px;padding:12px;margin:10px 0;background:#fff}
+  .task.done{opacity:.55}
+  .task.done .ttl{text-decoration:line-through}
+  .task .hrs{font:700 26px system-ui,sans-serif;min-width:70px;text-align:right}
+  .task .hrs small{font-size:13px;font-weight:600;color:var(--muted)}
+  .task .body{flex:1}
+  .task .ttl{font-weight:600}
+  .task ul{margin:6px 0 0;padding-left:18px;font-size:14px;color:var(--muted)}
+  .task label{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer}
+  /* plan */
+  .planrow{display:grid;grid-template-columns:28px 1fr 90px 64px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+  .bar{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+  .bar span{display:block;height:100%}
+  /* schedule */
+  .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+  .day{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;min-height:120px}
+  .day.today{border:2px solid var(--accent)}
+  .day.past{opacity:.6}
+  .day h4{margin:0 0 6px;font-size:13px;color:var(--muted)}
+  .day.today h4{color:var(--accent)}
+  .blk{border-radius:8px;padding:6px 7px;margin-bottom:6px;font-size:13px;cursor:pointer;border-left:4px solid}
+  .blk.done{opacity:.5;text-decoration:line-through}
+  .exam{background:#fdecec;color:var(--bad);border-radius:8px;padding:5px 7px;font:700 12px system-ui,sans-serif;margin-bottom:6px}
+  @media (max-width:720px){
+    nav .tabs{gap:2px;padding:6px 6px}
+    nav button{flex:1 1 0;padding:10px 4px;font-size:13.5px}
+    .ratingrow{flex-wrap:nowrap}
+    .conf{gap:3px}
+    .conf button{width:34px;height:38px;font-size:14px}
+    .week{grid-template-columns:1fr}
+    .day{min-height:0}
+    .planrow{grid-template-columns:24px 1fr 56px}
+    .planrow .bar{display:none}
+    .task .hrs{font-size:22px;min-width:56px}
+  }
+  /* files */
+  .tree{font-size:14px}
+  .tree .course{margin:10px 0 4px;font-weight:700}
+  .tree .chap{margin:6px 0 2px 14px;font-weight:600}
+  .tree .type{margin:2px 0 2px 30px;color:var(--muted)}
+  .tree .file{margin:1px 0 1px 46px;word-break:break-all}
+  .unsorted td{font-size:14px}
+  .unsorted select{min-height:38px;padding:6px 8px}
+  .log{font-size:13px;max-height:180px;overflow:auto;background:#fbfcfb;border:1px solid var(--line);border-radius:10px;padding:8px}
+  /* practice */
+  .problem{font-size:17px;padding:14px;border-radius:12px;background:var(--accent-soft);margin:10px 0}
+  .steps{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;background:#fbfcfb;border:1px solid var(--line);border-radius:10px;padding:10px;white-space:pre-wrap}
+  footer{max-width:960px;margin:0 auto;padding:0 12px 40px}
+</style>
+</head>
+<body>
+<header>
+  <h1>StudyDesk</h1>
+  <p>Know what to study first, and have the right files ready.</p>
+</header>
+<nav><div class="tabs" id="tabs"></div></nav>
+<main id="main"></main>
+<footer id="foot"></footer>
+
+<script>
+/* ---------- state ---------- */
+const LS_KEY = 'studydesk.v2';
+const PALETTE = ['#0f766e','#2563eb','#b45309','#7c3aed','#be123c','#0369a1','#4d7c0f','#a21caf'];
+const TABS = [['courses','Courses'],['today','Today'],['schedule','Schedule'],['files','Files'],['practice','Practice']];
+const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const FILE_TYPES = ['Slides','Homework','Past exams','Labs','Notes','Other'];
+
+function blankState(){
+  return {courses:[], done:{}, files:[], overrides:{}, log:[], tab:'courses', week:0,
+          practice:{target:'', formula:'auto'}, checklist:{}};
+}
+let canSave = true;
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ return Object.assign(blankState(), JSON.parse(raw)); }
+  }catch(e){ canSave = false; }
+  return blankState();
+}
+let S = load();
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); canSave = true; }
+  catch(e){ canSave = false; }
+}
+const fileObjs = new Map();       // file name -> File (this visit only)
+let problem = null;               // current practice problem
+let armed = null;                 // two-tap delete target
+
+/* ---------- helpers ---------- */
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isNum = v => v !== null && v !== undefined && v !== '' && !isNaN(+v);
+function ymd(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function parseYmd(s){ const p = s.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+function addDays(s, n){ const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); }
+function diffDays(a, b){ return Math.round((parseYmd(b) - parseYmd(a)) / 864e5); }
+function fmtDate(s){ const d = parseYmd(s); return WD[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()]; }
+const TODAY = ymd(new Date());
+const hrs = units => { const h = units / 2; return (Number.isInteger(h) ? h : h.toFixed(1)) + ' h'; };
+const courseById = id => S.courses.find(c => c.id === id);
+const badge = c => c.kw ? c.kw.toUpperCase() : c.name.slice(0, 4).toUpperCase();
+const badgeHtml = c => `<span class="badge" style="color:${c.color};border-color:${c.color}66;background:${c.color}14">${esc(badge(c))}</span>`;
+function chLabel(ch){ return 'Ch ' + esc(ch.num) + (ch.name ? ' · ' + esc(ch.name) : ''); }
+function fmtNum(x){
+  if(!isFinite(x)) return String(x);
+  const a = Math.abs(x);
+  if(a !== 0 && (a >= 1e4 || a < 1e-2)) return x.toExponential(2).replace('e+', ' × 10^').replace('e-', ' × 10^-');
+  return String(Number(x.toPrecision(4)));
+}
+
+/* ---------- planning maths ---------- */
+function studyDays(c){ return c.exam ? Math.max(0, diffDays(TODAY, c.exam)) : 0; }
+
+// Weights: blank weights share whatever is left of 100%; the result is scaled to add to 100%.
+function effWeights(c){
+  const ch = c.chapters, w = {};
+  if(!ch.length) return w;
+  let entered = 0, blanks = 0;
+  ch.forEach(x => { if(isNum(x.weight)) entered += +x.weight; else blanks++; });
+  const rest = Math.max(0, 100 - entered);
+  ch.forEach(x => { w[x.id] = isNum(x.weight) ? +x.weight : (blanks ? rest / blanks : 0); });
+  let tot = Object.values(w).reduce((a, b) => a + b, 0);
+  if(tot <= 0){ ch.forEach(x => w[x.id] = 1); tot = ch.length; }
+  ch.forEach(x => w[x.id] = w[x.id] * 100 / tot);
+  return w;
+}
+function weightNote(c){
+  let entered = 0, blanks = 0;
+  c.chapters.forEach(x => { if(isNum(x.weight)) entered += +x.weight; else blanks++; });
+  if(!c.chapters.length) return '';
+  if(blanks === c.chapters.length) return '<span class="muted">No weights yet: all chapters count equally.</span>';
+  if(blanks && entered <= 100) return `<span class="muted">Blank weights share the remaining ${fmtNum(100 - entered)}%.</span>`;
+  if(Math.abs(entered - 100) < 0.01 && !blanks) return '<span class="ok">Weights add up to 100% ✓</span>';
+  return `<span class="bad">Weights add up to ${fmtNum(entered)}%.</span> <span class="muted">They are scaled to 100%.</span>`;
+}
+
+function practiceStats(ch){
+  const a = (ch.attempts || []).slice(-10);
+  const right = a.filter(Boolean).length;
+  return {n: a.length, right, acc: a.length ? right / a.length : null};
+}
+// Confidence used by the plan: own rating, blended with practice once there are 3+ attempts.
+function effConf(ch){
+  const self = ch.conf || 3, p = practiceStats(ch);
+  if(p.n >= 3) return 0.5 * self + 0.5 * (1 + 4 * p.acc);
+  return self;
+}
+
+// Hours are planned in half-hour units, so they always add up exactly.
+function planCourse(c){
+  const days = studyDays(c);
+  const u = Math.max(0, Math.round((+c.hpd || 0) * 2));
+  const totalUnits = days * u;
+  const w = effWeights(c);
+  const rows = c.chapters.map(ch => {
+    const k = effConf(ch);
+    return {ch, w: w[ch.id], k, p: Math.max(0, w[ch.id] * (1 - k / 5))};
+  });
+  const sumP = rows.reduce((a, r) => a + r.p, 0);
+  rows.forEach(r => {
+    r.share = sumP ? r.p / sumP : 0;
+    r.exactUnits = totalUnits * r.share;
+    r.units = Math.floor(r.exactUnits + 1e-9);
+  });
+  let left = totalUnits - rows.reduce((a, r) => a + r.units, 0);
+  if(sumP > 0){
+    rows.slice().sort((a, b) => (b.exactUnits - b.units) - (a.exactUnits - a.units) || b.p - a.p)
+        .forEach(r => { if(left > 0 && r.p > 0){ r.units++; left--; } });
+  }
+  rows.sort((a, b) => b.p - a.p || (+a.ch.num) - (+b.ch.num));
+  return {days, u, totalUnits, rows, sumP,
+          active: rows.filter(r => r.p > 0), covered: rows.filter(r => r.p <= 0)};
+}
+
+// Fill each study day, in priority order, until the exam.
+function scheduleCourse(c, plan){
+  const blocks = [], queue = plan.active.filter(r => r.units > 0).map(r => ({id: r.ch.id, left: r.units}));
+  let qi = 0;
+  for(let i = 0; i < plan.days; i++){
+    const date = addDays(TODAY, i);
+    let cap = plan.u;
+    while(cap > 0 && qi < queue.length){
+      const take = Math.min(cap, queue[qi].left);
+      blocks.push({date, cid: c.id, chid: queue[qi].id, units: take});
+      cap -= take; queue[qi].left -= take;
+      if(queue[qi].left === 0) qi++;
+    }
+  }
+  return blocks;
+}
+function allPlans(){
+  return S.courses.map(c => { const plan = planCourse(c); return {c, plan, blocks: scheduleCourse(c, plan)}; });
+}
+const doneKey = b => b.date + '|' + b.cid + '|' + b.chid;
+
+/* ---------- file sorting ---------- */
+const TYPE_RULES = [
+  ['Past exams', /(midterm|final|exam|quiz|past[_\- ]?paper)/],
+  ['Homework',   /((^|[^a-z])hw|homework|assign|sheet|tutorial|pset|problem[_\- ]?set)/],
+  ['Labs',       /((^|[^a-z])lab)/],
+  ['Notes',      /(notes?|summary|cheat|formula)/],
+  ['Slides',     /(slide|lecture|(^|[^a-z])lec|\.pptx?$)/]
+];
+function classify(name){
+  const low = name.toLowerCase();
+  let course = null, best = 0;
+  S.courses.forEach(c => {
+    const k = (c.kw || '').toLowerCase().trim();
+    if(k && low.includes(k) && k.length > best){ course = c; best = k.length; }
+  });
+  let type = 'Other';
+  for(const [t, re] of TYPE_RULES){ if(re.test(low)){ type = t; break; } }
+  let chap = '';
+  if(course){
+    const m = low.match(/(?:^|[^a-z])(?:ch|chap|chapter)[\s_\-.]*0*(\d{1,3})(?!\d)/);
+    if(m && course.chapters.some(x => +x.num === +m[1])) chap = String(+m[1]);
+    if(!chap){
+      const hit = course.chapters.find(x => x.kw && low.includes(x.kw.toLowerCase()));
+      if(hit) chap = String(+hit.num);
+    }
+    if(!chap && type === 'Past exams') chap = 'all';
+  }
+  let r = {name, cid: course ? course.id : '', chap, type, manual: false};
+  const o = S.overrides[name];
+  if(o){ r = Object.assign(r, o, {manual: true}); }
+  r.sorted = !!(r.cid && courseById(r.cid) && r.chap);
+  return r;
+}
+const safeName = s => String(s).replace(/[\\/:*?"<>|]/g, '-').trim() || 'Course';
+function folderPath(r){
+  const c = courseById(r.cid);
+  return ['Courses', safeName(c.name), r.chap === 'all' ? 'General' : 'Ch' + r.chap, r.type];
+}
+function filesFor(cid, num){
+  return S.files.map(classify).filter(r => r.sorted && r.cid === cid && r.chap === String(+num)).map(r => r.name);
+}
+function addFileNames(names){
+  names.map(n => n.trim()).filter(Boolean).forEach(n => { if(!S.files.includes(n)) S.files.push(n); });
+  save(); render();
+}
+
+/* ---------- practice ---------- */
+const K = 8.99e9;
+const rnd = (a, b, step) => Number((Math.round((a + Math.random() * (b - a)) / step) * step).toFixed(6));
+const sig = (x, n) => Number(x.toPrecision(n));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function genOhm(){
+  const I = Math.max(0.1, rnd(0.1, 5, 0.1)), R = rnd(1, 100, 1), V = sig(I * R, 3);
+  const u = pick(['V', 'I', 'R']);
+  if(u === 'V') return {formula: "Ohm's law", text: `A ${R} Ω resistor carries a current of ${I} A. What is the voltage across it?`,
+    unit: 'V', answer: I * R, steps: `V = I × R\nV = ${I} A × ${R} Ω\nV = ${fmtNum(I * R)} V`};
+  if(u === 'I') return {formula: "Ohm's law", text: `A ${V} V source is connected across a ${R} Ω resistor. What current flows?`,
+    unit: 'A', answer: V / R, steps: `V = I × R  →  I = V ÷ R\nI = ${V} V ÷ ${R} Ω\nI = ${fmtNum(V / R)} A`};
+  return {formula: "Ohm's law", text: `A current of ${I} A flows when ${V} V is applied. What is the resistance?`,
+    unit: 'Ω', answer: V / I, steps: `V = I × R  →  R = V ÷ I\nR = ${V} V ÷ ${I} A\nR = ${fmtNum(V / I)} Ω`};
+}
+function genKin(){
+  const v0 = rnd(0, 20, 1), a = rnd(1, 10, 1), t = rnd(1, 10, 1), v = v0 + a * t;
+  const u = pick(['v', 'v0', 'a', 't']);
+  if(u === 'v') return {formula: 'Kinematics', text: `A car moving at ${v0} m/s accelerates at ${a} m/s² for ${t} s. What is its final speed?`,
+    unit: 'm/s', answer: v, steps: `v = v0 + a × t\nv = ${v0} + ${a} × ${t}\nv = ${v} m/s`};
+  if(u === 'v0') return {formula: 'Kinematics', text: `After accelerating at ${a} m/s² for ${t} s, a car moves at ${v} m/s. What was its starting speed?`,
+    unit: 'm/s', answer: v0, steps: `v = v0 + a × t  →  v0 = v − a × t\nv0 = ${v} − ${a} × ${t}\nv0 = ${v0} m/s`};
+  if(u === 'a') return {formula: 'Kinematics', text: `A car speeds up from ${v0} m/s to ${v} m/s in ${t} s. What is its acceleration?`,
+    unit: 'm/s²', answer: a, steps: `v = v0 + a × t  →  a = (v − v0) ÷ t\na = (${v} − ${v0}) ÷ ${t}\na = ${a} m/s²`};
+  return {formula: 'Kinematics', text: `A car accelerates at ${a} m/s² from ${v0} m/s to ${v} m/s. How long does it take?`,
+    unit: 's', answer: t, steps: `v = v0 + a × t  →  t = (v − v0) ÷ a\nt = (${v} − ${v0}) ÷ ${a}\nt = ${t} s`};
+}
+function genCoulomb(){
+  const q1 = rnd(1, 100, 1), q2 = rnd(1, 100, 1), rcm = rnd(5, 50, 1);
+  const F = K * q1 * 1e-6 * q2 * 1e-6 / Math.pow(rcm / 100, 2);
+  if(Math.random() < 0.6){
+    return {formula: "Coulomb's law", text: `Two point charges of ${q1} μC and ${q2} μC are ${rcm} cm apart. What is the size of the force between them?`,
+      unit: 'N', answer: F,
+      steps: `F = k × q1 × q2 ÷ r²\nConvert: q1 = ${q1} × 10^-6 C, q2 = ${q2} × 10^-6 C, r = ${rcm / 100} m\nF = 8.99 × 10^9 × ${q1}e-6 × ${q2}e-6 ÷ ${rcm / 100}²\nF = ${fmtNum(F)} N`};
+  }
+  const Fs = sig(F, 3), r = Math.sqrt(K * q1 * 1e-6 * q2 * 1e-6 / Fs) * 100;
+  return {formula: "Coulomb's law", text: `Two point charges of ${q1} μC and ${q2} μC repel with a force of ${fmtNum(Fs)} N. How far apart are they? (answer in cm)`,
+    unit: 'cm', answer: r,
+    steps: `F = k × q1 × q2 ÷ r²  →  r = √(k × q1 × q2 ÷ F)\nConvert: q1 = ${q1} × 10^-6 C, q2 = ${q2} × 10^-6 C\nr = √(8.99 × 10^9 × ${q1}e-6 × ${q2}e-6 ÷ ${fmtNum(Fs)}) = ${fmtNum(r / 100)} m\nr = ${fmtNum(r)} cm`};
+}
+// Formula bank: a chapter gets the formulas whose words appear in its name or keyword.
+const BANK = [
+  {id: 'ohm',  label: "Ohm's law (V = I R)",       gen: genOhm,     words: ['ohm', 'current', 'resist', 'circuit']},
+  {id: 'coul', label: "Coulomb's law",             gen: genCoulomb, words: ['coulomb']},
+  {id: 'kin',  label: 'Kinematics (v = v0 + a t)', gen: genKin,     words: ['kinemat', 'motion', 'velocit', 'accelerat']}
+];
+function formulasFor(ch){
+  const text = ((ch.name || '') + ' ' + (ch.kw || '')).toLowerCase();
+  return BANK.filter(f => f.words.some(w => text.includes(w)));
+}
+function newProblem(ch){
+  const list = ch ? formulasFor(ch) : [];
+  if(!list.length){ problem = null; return; }
+  const chosen = list.find(f => f.id === S.practice.formula) || pick(list);
+  problem = Object.assign(chosen.gen(), {checked: false, given: '', correct: null});
+}
+function parseAnswer(s){
+  s = String(s).trim().replace(/,/g, '').replace(/\s*[x×]\s*10\^?\s*/i, 'e');
+  const v = parseFloat(s);
+  return isFinite(v) ? v : null;
+}
+function practiceTargets(){
+  const list = [];
+  allPlans().forEach(({c, plan}) => plan.rows.forEach(r => { if(formulasFor(r.ch).length) list.push({c, ch: r.ch, p: r.p}); }));
+  return list.sort((a, b) => b.p - a.p);
+}
+
+/* ---------- rendering ---------- */
+function renderTabs(){
+  document.getElementById('tabs').innerHTML = TABS.map(([id, label]) =>
+    `<button data-a="tab" data-v="${id}" class="${S.tab === id ? 'on' : ''}">${label}</button>`).join('');
+}
+function emptyCourses(){
+  return `<div class="card empty"><h2>Start by adding a course.</h2>
+    <p>Then StudyDesk plans your hours, sorts your files and gives you practice.</p>
+    <button class="btn" data-a="tab" data-v="courses">Add a course</button></div>`;
+}
+function delBtn(id, label){
+  return `<button class="btn small danger ${armed === id ? 'arm' : ''}" data-a="del" data-v="${id}">${armed === id ? 'Tap again to delete' : esc(label)}</button>`;
+}
+
+function renderCourses(){
+  let h = '';
+  if(!S.courses.length){
+    h += `<div class="card empty"><h2>Start by adding a course.</h2>
+      <p>Or look around first with example courses.</p>
+      <button class="btn ghost" data-a="sample">Try with sample data</button></div>`;
+  }
+  h += `<div class="card"><h2>Add a course</h2>
+    <p class="hint">The keyword is how StudyDesk recognises this course in file names, e.g. "phys".</p>
+    <div class="row">
+      <div class="grow"><label class="f">Course name</label><input id="nc-name" placeholder="Physics II"></div>
+      <div class="grow"><label class="f">File keyword</label><input id="nc-kw" placeholder="phys"></div>
+      <div class="grow"><label class="f">Exam date</label><input id="nc-exam" type="date" min="${TODAY}"></div>
+      <div class="grow"><label class="f">Study hours per day</label><input id="nc-hpd" type="number" min="0" step="0.5" value="1.5"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" data-a="addCourse">Add course</button></div></div>`;
+
+  S.courses.forEach(c => {
+    const days = studyDays(c);
+    h += `<div class="card" style="border-top:5px solid ${c.color}">
+      <div class="row" style="justify-content:space-between">
+        <h2>${badgeHtml(c)} ${esc(c.name)}</h2>${delBtn('c:' + c.id, 'Delete course')}
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div class="grow"><label class="f">File keyword</label><input data-f="kw" data-c="${c.id}" value="${esc(c.kw)}"></div>
+        <div class="grow"><label class="f">Exam date ${c.exam ? '· ' + days + ' study days left' : ''}</label><input type="date" data-f="exam" data-c="${c.id}" value="${esc(c.exam)}"></div>
+        <div class="grow"><label class="f">Study hours per day</label><input type="number" min="0" step="0.5" data-f="hpd" data-c="${c.id}" value="${esc(c.hpd)}"></div>
+      </div>
+      <h3>Chapters</h3>
+      ${c.chapters.length ? `<table><thead><tr><th style="width:70px">No.</th><th>Name</th><th style="width:100px">Weight %</th><th style="width:130px">Name keyword</th><th style="width:60px"></th></tr></thead><tbody>
+        ${c.chapters.map(ch => `<tr>
+          <td><input type="number" min="0" data-f="num" data-c="${c.id}" data-ch="${ch.id}" value="${esc(ch.num)}"></td>
+          <td><input data-f="chname" data-c="${c.id}" data-ch="${ch.id}" value="${esc(ch.name)}" placeholder="Gauss's law"></td>
+          <td><input type="number" min="0" max="100" data-f="weight" data-c="${c.id}" data-ch="${ch.id}" value="${esc(ch.weight)}" placeholder="auto"></td>
+          <td><input data-f="chkw" data-c="${c.id}" data-ch="${ch.id}" value="${esc(ch.kw)}" placeholder="gauss"></td>
+          <td>${delBtn('h:' + c.id + ':' + ch.id, '✕')}</td></tr>`).join('')}
+        </tbody></table>
+        <p class="small" style="margin:8px 0">${weightNote(c)}</p>` : '<p class="hint">No chapters yet.</p>'}
+      <div class="row">
+        <div style="flex:0 0 90px"><input id="ch-num-${c.id}" type="number" min="0" placeholder="No."></div>
+        <div class="grow"><input id="ch-name-${c.id}" placeholder="Chapter name"></div>
+        <div style="flex:0 0 110px"><input id="ch-w-${c.id}" type="number" min="0" max="100" placeholder="Weight %"></div>
+        <div style="flex:0 0 140px"><input id="ch-kw-${c.id}" placeholder="Keyword (optional)"></div>
+        <button class="btn" data-a="addChapter" data-v="${c.id}">Add chapter</button>
+        ${c.chapters.length ? `<button class="btn ghost" data-a="equal" data-v="${c.id}">Split equally</button>` : ''}
+      </div>
+    </div>`;
+  });
+
+  h += `<div class="card"><h2>Your data</h2>
+    <p class="hint">Everything stays on this device. Save a backup to move it to another computer.</p>
+    ${canSave ? '' : '<div class="note warn">This browser is not saving automatically here. Use "Save backup" before you close the page.</div>'}
+    <div class="row">
+      <button class="btn ghost" data-a="export">Save backup</button>
+      <label class="btn ghost" style="display:inline-flex;align-items:center">Load backup<input type="file" accept=".json,application/json" data-f="import" style="display:none"></label>
+      ${S.courses.length ? '' : '<button class="btn ghost" data-a="sample">Load sample data</button>'}
+      ${delBtn('all', 'Clear everything')}
+    </div></div>`;
+  return h;
+}
+
+function renderToday(){
+  if(!S.courses.length) return emptyCourses();
+  const plans = allPlans();
+  let h = '';
+
+  // 1. confidence
+  h += `<div class="card"><h2>How sure are you?</h2>
+    <p class="hint">Rate each chapter: 1 = lost, 5 = I could teach it. Takes a minute.</p>`;
+  S.courses.forEach(c => {
+    if(!c.chapters.length) return;
+    h += `<h3>${badgeHtml(c)} ${esc(c.name)}</h3>`;
+    c.chapters.slice().sort((a, b) => +a.num - +b.num).forEach(ch => {
+      const p = practiceStats(ch);
+      const adj = p.n >= 3 ? `<span class="small muted">practice ${p.right}/${p.n} → used ${effConf(ch).toFixed(1)}</span>` : '';
+      h += `<div class="ratingrow"><div>${chLabel(ch)} ${adj}</div><div class="conf">${[1,2,3,4,5].map(v =>
+        `<button class="${(ch.conf || 3) === v ? 'on' : ''}" data-a="conf" data-v="${c.id}:${ch.id}:${v}" aria-label="Confidence ${v}">${v}</button>`).join('')}</div></div>`;
+    });
+  });
+  h += `</div>`;
+
+  // 2. today's tasks
+  const tasks = [];
+  plans.forEach(({c, blocks}) => blocks.filter(b => b.date === TODAY).forEach(b => tasks.push({c, b, ch: c.chapters.find(x => x.id === b.chid)})));
+  const doneT = tasks.filter(t => S.done[doneKey(t.b)]);
+  const leftU = tasks.filter(t => !S.done[doneKey(t.b)]).reduce((a, t) => a + t.b.units, 0);
+  h += `<div class="card"><h2>Today · ${fmtDate(TODAY)}</h2>`;
+  if(!tasks.length){
+    h += `<p class="hint">Nothing planned for today. Check that each course has an exam date and study hours.</p>`;
+  } else {
+    h += `<div class="small"><b>${doneT.length} of ${tasks.length}</b> tasks done · <b>${hrs(leftU)}</b> left</div>
+      <div class="progress"><span style="width:${Math.round(100 * doneT.length / tasks.length)}%"></span></div>`;
+    tasks.forEach(t => {
+      const d = !!S.done[doneKey(t.b)], files = filesFor(t.c.id, t.ch.num);
+      h += `<div class="task ${d ? 'done' : ''}" style="border-left-color:${t.c.color}">
+        <div class="body">
+          <div>${badgeHtml(t.c)} <span class="ttl">${chLabel(t.ch)}</span></div>
+          ${files.length ? `<ul>${files.slice(0, 5).map(f => `<li>${esc(f)}</li>`).join('')}${files.length > 5 ? `<li>+ ${files.length - 5} more</li>` : ''}</ul>`
+                         : `<div class="small muted" style="margin-top:4px">No files sorted for this chapter yet.</div>`}
+          <label style="margin-top:8px"><input type="checkbox" data-a="done" data-v="${esc(doneKey(t.b))}" ${d ? 'checked' : ''}> Done</label>
+        </div>
+        <div class="hrs">${(t.b.units / 2)}<small> h</small></div></div>`;
+    });
+    if(doneT.length === tasks.length) h += `<div class="note">All of today's tasks are done. Well done.</div>`;
+  }
+  h += `</div>`;
+
+  // 3. plan to exam
+  plans.forEach(({c, plan}) => {
+    if(!c.chapters.length) return;
+    const maxU = Math.max(1, ...plan.rows.map(r => r.units));
+    h += `<div class="card" style="border-top:5px solid ${c.color}">
+      <h2>${badgeHtml(c)} ${esc(c.name)} · plan to the exam</h2>
+      <p class="hint">${c.exam ? `Exam ${fmtDate(c.exam)} · ${plan.days} study days × ${hrs(plan.u)} = <b>${hrs(plan.totalUnits)}</b>` : 'Add an exam date to plan this course.'}</p>`;
+    if(plan.totalUnits && !plan.active.length) h += `<div class="note">Every chapter is rated 5. Use the time for past exams or another course.</div>`;
+    plan.active.forEach((r, i) => {
+      h += `<div class="planrow"><b>${i + 1}</b><div>${chLabel(r.ch)}</div>
+        <div class="bar"><span style="width:${Math.round(100 * r.units / maxU)}%;background:${c.color}"></span></div>
+        <b style="text-align:right">${hrs(r.units)}</b></div>`;
+    });
+    if(plan.covered.length){
+      h += `<details><summary>Covered (${plan.covered.length})</summary>
+        ${plan.covered.map(r => `<div class="small" style="padding:4px 0">${chLabel(r.ch)} · rated 5, no hours needed</div>`).join('')}</details>`;
+    }
+    h += `<details><summary>How was this calculated?</summary>
+      <p class="small">Priority = weight × (1 − confidence ÷ 5). Each chapter gets total hours × its share of the priority, rounded to half hours so the total stays exact.</p>
+      <div style="overflow-x:auto"><table class="small"><thead><tr><th>Chapter</th><th>Weight</th><th>Confidence</th><th>Priority</th><th>Share</th><th>Exact</th><th>Planned</th></tr></thead><tbody>
+      ${plan.rows.map(r => `<tr><td>Ch ${esc(r.ch.num)}</td><td>${r.w.toFixed(1)}%</td><td>${r.k.toFixed(1)}</td><td>${r.w.toFixed(1)} × (1 − ${r.k.toFixed(1)}/5) = ${r.p.toFixed(2)}</td><td>${(100 * r.share).toFixed(1)}%</td><td>${(r.exactUnits / 2).toFixed(2)} h</td><td><b>${hrs(r.units)}</b></td></tr>`).join('')}
+      <tr><td colspan="6"><b>Total</b></td><td><b>${hrs(plan.rows.reduce((a, r) => a + r.units, 0))}</b> of ${hrs(plan.totalUnits)}</td></tr>
+      </tbody></table></div></details></div>`;
+  });
+  return h;
+}
+
+function renderSchedule(){
+  if(!S.courses.length) return emptyCourses();
+  const plans = allPlans();
+  const t = parseYmd(TODAY);
+  const start = addDays(TODAY, -t.getDay() + 7 * S.week);
+  const days = Array.from({length: 7}, (_, i) => addDays(start, i));
+  let h = `<div class="card"><div class="row" style="justify-content:space-between">
+      <h2>Week of ${fmtDate(days[0])}</h2>
+      <div class="row"><button class="btn ghost small" data-a="week" data-v="-1">‹ Previous</button>
+      <button class="btn ghost small" data-a="week" data-v="0">This week</button>
+      <button class="btn ghost small" data-a="week" data-v="1">Next ›</button></div></div>
+      <p class="hint">Tap a block to mark it done. Highest-priority chapters come first.</p>
+      <div class="week">`;
+  days.forEach(d => {
+    const cls = d === TODAY ? 'today' : (d < TODAY ? 'past' : '');
+    h += `<div class="day ${cls}"><h4>${fmtDate(d)}${d === TODAY ? ' · today' : ''}</h4>`;
+    S.courses.filter(c => c.exam === d).forEach(c => { h += `<div class="exam">${esc(badge(c))} exam</div>`; });
+    plans.forEach(({c, blocks}) => blocks.filter(b => b.date === d).forEach(b => {
+      const ch = c.chapters.find(x => x.id === b.chid), k = doneKey(b);
+      h += `<div class="blk ${S.done[k] ? 'done' : ''}" style="border-left-color:${c.color};background:${c.color}12" data-a="done" data-v="${esc(k)}">
+        <b>${esc(badge(c))}</b> Ch ${esc(ch.num)} · ${hrs(b.units)}</div>`;
+    }));
+    h += `</div>`;
+  });
+  h += `</div></div><div class="card"><h2>Schedule check</h2><p class="hint">Every planned hour should have a place before the exam.</p>`;
+  plans.forEach(({c, plan, blocks}) => {
+    const planned = plan.active.reduce((a, r) => a + r.units, 0), placed = blocks.reduce((a, b) => a + b.units, 0);
+    h += `<div class="row" style="padding:6px 0">${badgeHtml(c)} ${esc(c.name)}: ${hrs(planned)} planned, ${hrs(placed)} placed
+      ${planned === placed ? '<span class="ok">✓</span>' : '<span class="bad">check the exam date and hours</span>'}</div>`;
+  });
+  return h + `</div>`;
+}
+
+function renderFiles(){
+  if(!S.courses.length) return emptyCourses();
+  const rs = S.files.map(classify);
+  const sorted = rs.filter(r => r.sorted), unsorted = rs.filter(r => !r.sorted);
+  let h = `<div class="card"><h2>Add your files</h2>
+    <p class="hint">StudyDesk reads file names only. Your originals are never moved, renamed or deleted.</p>
+    <div class="row">
+      <label class="btn">Choose files<input type="file" multiple data-f="pickFiles" style="display:none"></label>
+      <label class="btn ghost">Choose a folder<input type="file" webkitdirectory multiple data-f="pickFiles" style="display:none"></label>
+      <button class="btn ghost" data-a="sampleFiles">Try sample names</button>
+    </div>
+    <details><summary>Or paste file names</summary>
+      <textarea id="paste" placeholder="phys_ch23_slides.pdf&#10;ee201_ch2_sheet.pdf"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn small" data-a="paste">Add names</button></div>
+    </details></div>`;
+
+  if(!rs.length) return h;
+
+  h += `<div class="card"><div class="row" style="justify-content:space-between"><h2>Sorted · ${sorted.length} of ${rs.length}</h2>${delBtn('files', 'Clear list')}</div>
+    <p class="hint">Courses › course › chapter › type. Past exams for a whole course go in "General".</p><div class="tree">`;
+  S.courses.forEach(c => {
+    const mine = sorted.filter(r => r.cid === c.id);
+    if(!mine.length) return;
+    h += `<div class="course">${badgeHtml(c)} 📁 ${esc(c.name)} <span class="muted small">(${mine.length})</span></div>`;
+    const chaps = [...new Set(mine.map(r => r.chap))].sort((a, b) => a === 'all' ? 1 : b === 'all' ? -1 : +a - +b);
+    chaps.forEach(cp => {
+      const ch = c.chapters.find(x => String(+x.num) === cp);
+      h += `<div class="chap">📁 ${cp === 'all' ? 'General' : 'Ch' + esc(cp) + (ch && ch.name ? ' · ' + esc(ch.name) : '')}</div>`;
+      FILE_TYPES.forEach(tp => {
+        const fs = mine.filter(r => r.chap === cp && r.type === tp);
+        if(!fs.length) return;
+        h += `<div class="type">📁 ${tp}</div>` + fs.map(r => `<div class="file">📄 ${esc(r.name)}${r.manual ? ' <span class="small muted">(set by you)</span>' : ''}</div>`).join('');
+      });
+    });
+  });
+  h += `</div></div>`;
+
+  if(unsorted.length){
+    h += `<div class="card unsorted"><h2>Needs your help · ${unsorted.length}</h2>
+      <p class="hint">StudyDesk could not tell where these go. Pick the course and chapter.</p>
+      <div style="overflow-x:auto"><table><thead><tr><th>File</th><th>Course</th><th>Chapter</th><th>Type</th></tr></thead><tbody>`;
+    unsorted.forEach(r => {
+      const i = S.files.indexOf(r.name), c = courseById(r.cid);
+      h += `<tr><td style="word-break:break-all">${esc(r.name)}</td>
+        <td><select data-f="ovCourse" data-i="${i}"><option value="">Choose…</option>${S.courses.map(x => `<option value="${x.id}" ${x.id === r.cid ? 'selected' : ''}>${esc(badge(x))} · ${esc(x.name)}</option>`).join('')}</select></td>
+        <td><select data-f="ovChap" data-i="${i}" ${c ? '' : 'disabled'}><option value="">Choose…</option>
+          ${c ? c.chapters.slice().sort((a, b) => +a.num - +b.num).map(x => `<option value="${+x.num}" ${String(+x.num) === r.chap ? 'selected' : ''}>Ch ${esc(x.num)}${x.name ? ' · ' + esc(x.name) : ''}</option>`).join('') + `<option value="all" ${r.chap === 'all' ? 'selected' : ''}>General (whole course)</option>` : ''}</select></td>
+        <td><select data-f="ovType" data-i="${i}">${FILE_TYPES.map(t => `<option ${t === r.type ? 'selected' : ''}>${t}</option>`).join('')}</select></td></tr>`;
+    });
+    h += `</tbody></table></div></div>`;
+  }
+
+  const copyable = sorted.filter(r => fileObjs.has(r.name)).length;
+  h += `<div class="card"><h2>Make the folders</h2>
+    <p class="hint">Pick a place such as Documents. StudyDesk copies each sorted file into Courses/… and skips any file that already exists there.</p>
+    <div class="row">
+      <button class="btn" data-a="copy" ${copyable ? '' : 'disabled style="opacity:.5"'}>Copy ${copyable} file${copyable === 1 ? '' : 's'} into folders</button>
+      <button class="btn ghost" data-a="csv">Download sorting list</button>
+    </div>
+    ${copyable ? '' : '<p class="small muted">To copy, choose the files with "Choose files" or "Choose a folder" in this visit. Pasted names can only be listed.</p>'}
+    ${S.log.length ? `<h3>Log</h3><div class="log">${S.log.slice(-60).reverse().map(l => esc(l)).join('<br>')}</div>` : ''}
+  </div>`;
+  return h;
+}
+
+function renderPractice(){
+  if(!S.courses.length) return emptyCourses();
+  const targets = practiceTargets();
+  if(!targets.length) return `<div class="card empty"><h2>No practice for your chapters yet.</h2>
+    <p>Problems exist for Ohm's law, Coulomb's law and kinematics. A chapter gets them when its name or keyword mentions the topic, e.g. "Coulomb's law" or "Current and resistance".</p></div>`;
+  if(!S.practice.target || !targets.some(t => t.c.id + ':' + t.ch.id === S.practice.target)){ S.practice.target = targets[0].c.id + ':' + targets[0].ch.id; problem = null; }
+  const [cid, chid] = S.practice.target.split(':');
+  const c = courseById(cid), ch = c.chapters.find(x => x.id === chid), st = practiceStats(ch), forms = formulasFor(ch);
+  if(!problem) newProblem(ch);
+  let h = `<div class="card"><h2>Practice</h2>
+    <p class="hint">Results count for this chapter. After 3 answers they start to shape your plan.</p>
+    <div class="row">
+      <div class="grow"><label class="f">Chapter</label><select data-f="pTarget">${targets.map(t => `<option value="${t.c.id}:${t.ch.id}" ${t.c.id + ':' + t.ch.id === S.practice.target ? 'selected' : ''}>${esc(badge(t.c))} · Ch ${esc(t.ch.num)}${t.ch.name ? ' · ' + esc(t.ch.name) : ''}</option>`).join('')}</select></div>
+      ${forms.length > 1 ? `<div class="grow"><label class="f">Formula</label><select data-f="pFormula">
+        <option value="auto">Mixed</option>${forms.map(f => `<option value="${f.id}" ${S.practice.formula === f.id ? 'selected' : ''}>${f.label}</option>`).join('')}</select></div>` : ''}
+    </div>
+    <p class="small" style="margin-top:10px">${badgeHtml(c)} ${chLabel(ch)}: ${st.n ? `${st.right} of last ${st.n} correct` : 'no answers yet'} · confidence used in plan: <b>${effConf(ch).toFixed(1)}</b></p>
+    <div class="problem"><div class="small muted">${esc(problem.formula)}</div>${esc(problem.text)}</div>
+    <div class="row">
+      <div class="grow"><input id="ans" inputmode="decimal" placeholder="Your answer" value="${esc(problem.given)}" ${problem.checked ? 'disabled' : ''}></div>
+      <b>${esc(problem.unit)}</b>
+      ${problem.checked ? '' : '<button class="btn" data-a="check">Check</button>'}
+      <button class="btn ghost" data-a="newP">New problem</button>
+    </div>`;
+  if(problem.checked){
+    h += problem.correct
+      ? `<div class="note"><span class="ok">Correct.</span> Answer: ${fmtNum(problem.answer)} ${esc(problem.unit)}</div>`
+      : `<div class="note warn"><b>Not quite.</b> The answer is ${fmtNum(problem.answer)} ${esc(problem.unit)}. Here is how it works:</div>`;
+    h += `<div class="steps">${esc(problem.steps)}</div>`;
+  }
+  h += `<p class="small muted">Answers within 2% are accepted. Use the unit shown.</p></div>`;
+  return h;
+}
+
+function renderFooter(){
+  const items = ['Set up one real course in under 5 minutes without help',
+    "The plan's hours add up to the total",
+    'One chapter matches a hand check',
+    'Files land in the right course and chapter folder',
+    'Practice answers are marked correctly, with steps and units',
+    'The plan changes after practice',
+    'They would use it before their next exam'];
+  document.getElementById('foot').innerHTML = `<details><summary>Tester checklist</summary>
+    ${items.map((t, i) => `<label style="display:flex;gap:8px;align-items:center;padding:5px 0"><input type="checkbox" data-a="chk" data-v="${i}" ${S.checklist[i] ? 'checked' : ''}> ${esc(t)}</label>`).join('')}
+    </details>`;
+}
+
+function render(){
+  renderTabs();
+  const m = document.getElementById('main');
+  m.innerHTML = ({courses: renderCourses, today: renderToday, schedule: renderSchedule, files: renderFiles, practice: renderPractice}[S.tab] || renderCourses)();
+  renderFooter();
+}
+
+/* ---------- actions ---------- */
+function course(cid){ return courseById(cid); }
+function chapter(cid, chid){ const c = course(cid); return c && c.chapters.find(x => x.id === chid); }
+function download(name, text, type){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+function loadSample(){
+  const mk = (name, kw, examIn, hpd, chs) => ({id: uid(), name, kw, exam: addDays(TODAY, examIn), hpd, color: '',
+    chapters: chs.map(([num, n, w, conf, k]) => ({id: uid(), num, name: n, weight: w, conf, kw: k, attempts: []}))});
+  S.courses = [
+    mk('Physics II', 'phys', 9, 1.5, [[21, "Coulomb's law", 20, 4, 'coulomb'], [22, 'Electric field', 15, 3, 'field'], [23, "Gauss's law", 20, 2, 'gauss'], [24, 'Electric potential', 25, 2, 'potential'], [25, 'Capacitance', 20, 4, 'capacit']]),
+    mk('EE 201 MATLAB', 'ee201', 16, 1, [[1, 'Basics', 30, 4, 'basic'], [2, 'Loops', 40, 2, 'loop'], [3, 'Functions', '', 3, 'function']])
+  ];
+  S.courses.forEach((c, i) => c.color = PALETTE[i % PALETTE.length]);
+}
+const SAMPLE_FILES = ['phys_ch23_slides.pdf', 'phys_ch24_hw.pdf', 'Phys_Chapter_21_lecture.pptx', 'phys_gauss_notes.pdf',
+  'phys_midterm_2025.pdf', 'EE201_lec2_loops.pdf', 'ee201_ch3_sheet.pdf', 'ee201_ch1_quiz.pdf', 'Lecture 5.pdf', 'IMG_2041.jpg'];
+
+async function copyIntoFolders(){
+  const stamp = () => new Date().toLocaleTimeString();
+  if(!window.showDirectoryPicker){
+    S.log.push(stamp() + ' — This browser cannot create folders. Use Chrome or Edge on a computer, or download the sorting list.');
+    save(); render(); return;
+  }
+  let root;
+  try{ root = await window.showDirectoryPicker({mode: 'readwrite'}); }
+  catch(e){
+    if(e && e.name !== 'AbortError') S.log.push(stamp() + ' — Folders cannot be created from this preview. Download the page and open it on its own, then try again.');
+    save(); render(); return;
+  }
+  let copied = 0, skipped = 0;
+  for(const r of S.files.map(classify)){
+    if(!r.sorted || !fileObjs.has(r.name)) continue;
+    const path = folderPath(r);
+    try{
+      let dir = root;
+      for(const part of path) dir = await dir.getDirectoryHandle(part, {create: true});
+      let exists = false;
+      try{ await dir.getFileHandle(r.name); exists = true; }catch(e){}
+      if(exists){ skipped++; S.log.push(stamp() + ' — skipped (already there): ' + path.join('/') + '/' + r.name); continue; }
+      const fh = await dir.getFileHandle(r.name, {create: true});
+      const w = await fh.createWritable(); await w.write(fileObjs.get(r.name)); await w.close();
+      copied++; S.log.push(stamp() + ' — copied: ' + path.join('/') + '/' + r.name);
+    }catch(e){ S.log.push(stamp() + ' — could not copy ' + r.name + ': ' + (e && e.message || e)); }
+  }
+  S.log.push(stamp() + ` — done: ${copied} copied, ${skipped} skipped. Originals were not changed.`);
+  save(); render();
+}
+
+function doDelete(key){
+  if(key === 'all'){ const keepTab = S.tab; S = blankState(); S.tab = keepTab; fileObjs.clear(); problem = null; }
+  else if(key === 'files'){ S.files = []; S.overrides = {}; fileObjs.clear(); }
+  else if(key.startsWith('c:')){ S.courses = S.courses.filter(c => c.id !== key.slice(2)); }
+  else if(key.startsWith('h:')){ const [, cid, chid] = key.split(':'); const c = course(cid); if(c) c.chapters = c.chapters.filter(x => x.id !== chid); }
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-a]');
+  if(!el) return;
+  const a = el.dataset.a, v = el.dataset.v;
+  if(a !== 'del') armed = null;
+  if(a === 'tab'){ S.tab = v; save(); render(); window.scrollTo(0, 0); return; }
+  if(a === 'sample'){ loadSample(); S.tab = 'today'; save(); render(); return; }
+  if(a === 'addCourse'){
+    const name = document.getElementById('nc-name').value.trim();
+    if(!name){ document.getElementById('nc-name').focus(); return; }
+    const used = S.courses.map(c => c.color);
+    S.courses.push({id: uid(), name, kw: document.getElementById('nc-kw').value.trim().toLowerCase(),
+      exam: document.getElementById('nc-exam').value, hpd: +document.getElementById('nc-hpd').value || 0,
+      color: PALETTE.find(p => !used.includes(p)) || PALETTE[S.courses.length % PALETTE.length], chapters: []});
+    save(); render(); return;
+  }
+  if(a === 'addChapter'){
+    const c = course(v), num = document.getElementById('ch-num-' + v).value;
+    if(!isNum(num)){ document.getElementById('ch-num-' + v).focus(); return; }
+    c.chapters.push({id: uid(), num: +num, name: document.getElementById('ch-name-' + v).value.trim(),
+      weight: document.getElementById('ch-w-' + v).value, kw: document.getElementById('ch-kw-' + v).value.trim().toLowerCase(), conf: 3, attempts: []});
+    save(); render(); return;
+  }
+  if(a === 'equal'){ course(v).chapters.forEach(x => x.weight = ''); save(); render(); return; }
+  if(a === 'del'){
+    if(armed === v){ armed = null; doDelete(v); save(); render(); }
+    else { armed = v; render(); setTimeout(() => { if(armed === v){ armed = null; render(); } }, 3000); }
+    return;
+  }
+  if(a === 'conf'){ const [cid, chid, n] = v.split(':'); chapter(cid, chid).conf = +n; save(); render(); return; }
+  if(a === 'done'){ if(el.tagName === 'INPUT') S.done[v] = el.checked; else S.done[v] = !S.done[v]; save(); render(); return; }
+  if(a === 'week'){ S.week = v === '0' ? 0 : S.week + (+v); save(); render(); return; }
+  if(a === 'sampleFiles'){ addFileNames(SAMPLE_FILES); return; }
+  if(a === 'paste'){ addFileNames(document.getElementById('paste').value.split('\n')); return; }
+  if(a === 'copy'){ copyIntoFolders(); return; }
+  if(a === 'csv'){
+    const rows = [['file', 'course', 'chapter', 'type', 'folder']].concat(S.files.map(classify).map(r =>
+      [r.name, r.cid ? courseById(r.cid).name : '', r.chap === 'all' ? 'General' : r.chap, r.type, r.sorted ? folderPath(r).join('/') : 'Unsorted']));
+    download('studydesk-sorting.csv', rows.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n'), 'text/csv');
+    return;
+  }
+  if(a === 'export'){ download('studydesk-backup.json', JSON.stringify(S, null, 1), 'application/json'); return; }
+  if(a === 'check'){
+    const val = parseAnswer(document.getElementById('ans').value);
+    if(val === null){ document.getElementById('ans').focus(); return; }
+    problem.given = document.getElementById('ans').value;
+    problem.correct = Math.abs(val - problem.answer) <= 0.02 * Math.abs(problem.answer) + 1e-12;
+    problem.checked = true;
+    const [cid, chid] = S.practice.target.split(':'), ch = chapter(cid, chid);
+    ch.attempts = (ch.attempts || []).concat(problem.correct).slice(-50);
+    save(); render(); return;
+  }
+  if(a === 'newP'){ problem = null; render(); return; }
+  if(a === 'chk'){ S.checklist[v] = el.checked; save(); return; }
+});
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && e.target.id === 'ans' && problem && !problem.checked){ e.preventDefault(); document.querySelector('[data-a="check"]').click(); }
+});
+
+document.addEventListener('change', e => {
+  const t = e.target, f = t.dataset.f;
+  if(!f) return;
+  const c = t.dataset.c ? course(t.dataset.c) : null;
+  const ch = t.dataset.ch ? chapter(t.dataset.c, t.dataset.ch) : null;
+  if(f === 'kw'){ c.kw = t.value.trim().toLowerCase(); }
+  else if(f === 'exam'){ c.exam = t.value; }
+  else if(f === 'hpd'){ c.hpd = Math.max(0, +t.value || 0); }
+  else if(f === 'num'){ if(isNum(t.value)) ch.num = +t.value; }
+  else if(f === 'chname'){ ch.name = t.value.trim(); }
+  else if(f === 'weight'){ ch.weight = t.value === '' ? '' : Math.max(0, +t.value); }
+  else if(f === 'chkw'){ ch.kw = t.value.trim().toLowerCase(); }
+  else if(f === 'pickFiles'){ const names = []; [...t.files].forEach(file => { fileObjs.set(file.name, file); names.push(file.name); }); addFileNames(names); return; }
+  else if(f === 'import'){
+    const file = t.files[0]; if(!file) return;
+    file.text().then(txt => { try{ S = Object.assign(blankState(), JSON.parse(txt)); save(); render(); }catch(err){ alertNote('That file is not a StudyDesk backup.'); } });
+    return;
+  }
+  else if(f === 'ovCourse' || f === 'ovChap' || f === 'ovType'){
+    const name = S.files[+t.dataset.i], cur = classify(name);
+    const o = {cid: cur.cid, chap: cur.chap, type: cur.type};
+    if(f === 'ovCourse'){ o.cid = t.value; o.chap = ''; }
+    if(f === 'ovChap') o.chap = t.value;
+    if(f === 'ovType') o.type = t.value;
+    S.overrides[name] = o;
+  }
+  else if(f === 'pTarget'){ S.practice.target = t.value; S.practice.formula = 'auto'; problem = null; }
+  else if(f === 'pFormula'){ S.practice.formula = t.value; problem = null; }
+  save(); render();
+});
+function alertNote(msg){ const m = document.getElementById('main'); m.insertAdjacentHTML('afterbegin', `<div class="note warn">${esc(msg)}</div>`); }
+
+if(!S.courses.length) S.tab = 'courses';
+render();
+</script>
+</body>
+</html>
